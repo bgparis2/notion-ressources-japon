@@ -438,8 +438,45 @@
             });
             
             prefecture.addEventListener('mousemove', (e) => {
-                tooltip.style.left = (e.pageX + 15) + 'px';
-                tooltip.style.top = (e.pageY - 10) + 'px';
+                const tooltip = document.getElementById('tooltip');
+                const container = document.querySelector('.map-container');
+                const containerRect = container.getBoundingClientRect();
+                
+                // Position par défaut
+                let left = e.pageX + 15;
+                let top = e.pageY - 10;
+                
+                // Obtenir les dimensions de la tooltip
+                const tooltipRect = tooltip.getBoundingClientRect();
+                const tooltipWidth = tooltipRect.width || 300; // fallback si pas encore visible
+                const tooltipHeight = tooltipRect.height || 200;
+                
+                // Vérifier les débordements et ajuster
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                
+                // Débordement à droite
+                if (left + tooltipWidth > viewportWidth - 20) {
+                    left = e.pageX - tooltipWidth - 15; // Afficher à gauche du curseur
+                }
+                
+                // Débordement en bas
+                if (top + tooltipHeight > viewportHeight - 20) {
+                    top = e.pageY - tooltipHeight - 15; // Afficher au-dessus du curseur
+                }
+                
+                // Débordement à gauche
+                if (left < 20) {
+                    left = 20;
+                }
+                
+                // Débordement en haut
+                if (top < 20) {
+                    top = 20;
+                }
+                
+                tooltip.style.left = left + 'px';
+                tooltip.style.top = top + 'px';
             });
             
             prefecture.addEventListener('mouseleave', () => {
