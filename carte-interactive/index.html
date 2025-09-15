@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte Interactive du Japon</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header .japanese {
+            font-size: 3em;
+            margin: 10px 0;
+            font-weight: 400;
+        }
+        
+        .map-container {
+            position: relative;
+            padding: 40px;
+            background: #f8f9fa;
+        }
+        
+        .map-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .main-map {
+            width: 100%;
+            height: auto;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .okinawa-inset {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 120px;
+            height: 80px;
+            background: #ffffff;
+            border: 2px solid #1976d2;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .okinawa-label {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            font-size: 12px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        
+        .prefecture {
+            fill: #e3f2fd;
+            stroke: #1976d2;
+            stroke-width: 0.5;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .prefecture:hover {
+            fill: #1976d2;
+            stroke: #0d47a1;
+            stroke-width: 1.5;
+        }
+        
+        .honshu { fill: #e8f5e8; }
+        .honshu:hover { fill: #4caf50; }
+        
+        .kyushu { fill: #fff3e0; }
+        .kyushu:hover { fill: #ff9800; }
+        
+        .shikoku { fill: #f3e5f5; }
+        .shikoku:hover { fill: #9c27b0; }
+        
+        .hokkaido { fill: #e1f5fe; }
+        .hokkaido:hover { fill: #03a9f4; }
+        
+        .okinawa { fill: #fce4ec; }
+        .okinawa:hover { fill: #e91e63; }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            max-width: 300px;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .tooltip.visible {
+            opacity: 1;
+        }
+        
+        .tooltip h3 {
+            margin: 0 0 10px 0;
+            color: #ffd54f;
+            font-size: 16px;
+        }
+        
+        .tooltip .japanese-name {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #81c784;
+        }
+        
+        .tooltip .info {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+        
+        .legend {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .legend h3 {
+            margin: 0 0 15px 0;
+            color: #1976d2;
+            font-size: 18px;
+        }
+        
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .legend-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 8px;
+            border: 1px solid #ddd;
+            flex-shrink: 0;
+        }
+        
+        .instructions {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2em; }
+            .header .japanese { font-size: 2.5em; }
+            .map-container { padding: 20px; }
+            .tooltip { font-size: 12px; max-width: 250px; }
+            .okinawa-inset { width: 100px; height: 60px; }
+            .legend-items { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Carte Interactive du Japon</h1>
+            <div class="japanese">日本地図</div>
+        </div>
+        
+        <div class="map-container">
+            <div class="map-wrapper">
+                <!-- Carte principale du Japon (Hokkaido, Honshu, Shikoku, Kyushu) -->
+                <svg class="main-map" viewBox="0 0 1000 1200" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Hokkaido -->
+                    <path class="prefecture hokkaido" data-name="北海道" data-romaji="Hokkaido" data-capital="札幌" data-population="5.2M" data-specialite="Crabe, ramen miso, produits laitiers" data-attraction="Parc national Daisetsuzan, Festival de neige de Sapporo" 
+                    d="M 750 50 Q 850 40 900 80 Q 920 120 900 160 Q 880 200 840 220 Q 790 230 740 210 Q 700 180 680 140 Q 670 100 700 70 Q 720 50 750 50 Z"/>
+                    
+                    <!-- Honshu - Tohoku -->
+                    <path class="prefecture honshu" data-name="青森県" data-romaji="Aomori" data-capital="青森" data-population="1.2M" data-specialite="Pommes, thon, festivals Nebuta" data-attraction="Mont Iwaki, Château Hirosaki" 
+                    d="M 700 250 Q 730 240 760 260 Q 770 280 760 300 Q 740 310 720 300 Q 700 285 690 270 Q 695 255 700 250 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="岩手県" data-romaji="Iwate" data-capital="盛岡" data-population="1.2M" data-specialite="Bœuf wagyu, artisanat" data-attraction="Sanctuaires de Hiraizumi, Mont Iwate" 
+                    d="M 690 310 Q 720 305 740 325 Q 750 350 740 375 Q 720 385 700 380 Q 680 365 670 345 Q 675 325 690 310 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="宮城県" data-romaji="Miyagi" data-capital="仙台" data-population="2.3M" data-specialite="Langue de bœuf, saké, huîtres" data-attraction="Matsushima, Château de Sendai" 
+                    d="M 670 385 Q 700 380 720 400 Q 730 420 720 440 Q 700 450 680 445 Q 660 430 650 410 Q 655 395 670 385 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="秋田県" data-romaji="Akita" data-capital="秋田" data-population="1.0M" data-specialite="Kiritanpo, saké" data-attraction="Lac Tazawa, Kakunodate" 
+                    d="M 650 320 Q 680 315 700 335 Q 710 355 700 375 Q 680 385 660 380 Q 640 365 630 345 Q 635 330 650 320 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="山形県" data-romaji="Yamagata" data-capital="山形" data-population="1.1M" data-specialite="Cerises, bœuf wagyu" data-attraction="Mont Zao, Ginzan Onsen" 
+                    d="M 630 380 Q 660 375 680 395 Q 690 415 680 435 Q 660 445 640 440 Q 620 425 610 405 Q 615 390 630 380 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="福島県" data-romaji="Fukushima" data-capital="福島" data-population="1.9M" data-specialite="Pêches, saké" data-attraction="Aizuwakamatsu, Spa Resort" 
+                    d="M 610 440 Q 640 435 660 455 Q 670 475 660 495 Q 640 505 620 500 Q 600 485 590 465 Q 595 450 610 440 Z"/>
+                    
+                    <!-- Honshu - Kanto -->
+                    <path class="prefecture honshu" data-name="茨城県" data-romaji="Ibaraki" data-capital="水戸" data-population="2.9M" data-specialite="Natto, melons" data-attraction="Parc Hitachi Seaside" 
+                    d="M 660 500 Q 690 495 710 515 Q 720 535 710 555 Q 690 565 670 560 Q 650 545 640 525 Q 645 510 660 500 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="栃木県" data-romaji="Tochigi" data-capital="宇都宮" data-population="1.9M" data-specialite="Gyoza, fraises" data-attraction="Nikko, Toshogu" 
+                    d="M 590 500 Q 620 495 640 515 Q 650 535 640 555 Q 620 565 600 560 Q 580 545 570 525 Q 575 510 590 500 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="群馬県" data-romaji="Gunma" data-capital="前橋" data-population="1.9M" data-specialite="Konnyaku, sources chaudes" data-attraction="Kusatsu Onsen" 
+                    d="M 550 520 Q 580 515 600 535 Q 610 555 600 575 Q 580 585 560 580 Q 540 565 530 545 Q 535 530 550 520 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="埼玉県" data-romaji="Saitama" data-capital="さいたま" data-population="7.3M" data-specialite="Unagi, igloo kakigori" data-attraction="Kawagoe, Chichibu" 
+                    d="M 570 560 Q 600 555 620 575 Q 630 595 620 615 Q 600 625 580 620 Q 560 605 550 585 Q 555 570 570 560 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="千葉県" data-romaji="Chiba" data-capital="千葉" data-population="6.3M" data-specialite="Cacahuètes, soja, poires" data-attraction="Narita-san, Tokyo Disneyland" 
+                    d="M 620 575 Q 650 570 670 590 Q 680 610 670 630 Q 650 640 630 635 Q 610 620 600 600 Q 605 585 620 575 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="東京都" data-romaji="Tokyo" data-capital="東京" data-population="14M" data-specialite="Sushi, monjayaki, culture pop" data-attraction="Senso-ji, Shibuya, Palais impérial" 
+                    d="M 580 620 Q 610 615 630 635 Q 640 655 630 675 Q 610 685 590 680 Q 570 665 560 645 Q 565 630 580 620 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="神奈川県" data-romaji="Kanagawa" data-capital="横浜" data-population="9.2M" data-specialite="Ramen Iekei, Chinatown" data-attraction="Kamakura, Mont Fuji, Hakone" 
+                    d="M 550 680 Q 580 675 600 695 Q 610 715 600 735 Q 580 745 560 740 Q 540 725 530 705 Q 535 690 550 680 Z"/>
+                    
+                    <!-- Honshu - Chubu -->
+                    <path class="prefecture honshu" data-name="新潟県" data-romaji="Niigata" data-capital="新潟" data-population="2.2M" data-specialite="Riz koshihikari, saké" data-attraction="Sado, stations de ski" 
+                    d="M 510 480 Q 540 475 560 495 Q 570 515 560 535 Q 540 545 520 540 Q 500 525 490 505 Q 495 490 510 480 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="長野県" data-romaji="Nagano" data-capital="長野" data-population="2.0M" data-specialite="Soba, pommes, miso" data-attraction="Jigokudani, Matsumoto, JO 1998" 
+                    d="M 490 540 Q 520 535 540 555 Q 550 575 540 595 Q 520 605 500 600 Q 480 585 470 565 Q 475 550 490 540 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="山梨県" data-romaji="Yamanashi" data-capital="甲府" data-population="0.8M" data-specialite="Raisin, vin, hoto" data-attraction="Mont Fuji, Lac Kawaguchi" 
+                    d="M 530 600 Q 560 595 580 615 Q 590 635 580 655 Q 560 665 540 660 Q 520 645 510 625 Q 515 610 530 600 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="静岡県" data-romaji="Shizuoka" data-capital="静岡" data-population="3.6M" data-specialite="Thé vert, wasabi, anguille" data-attraction="Mont Fuji, Péninsule d'Izu" 
+                    d="M 510 660 Q 540 655 560 675 Q 570 695 560 715 Q 540 725 520 720 Q 500 705 490 685 Q 495 670 510 660 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="愛知県" data-romaji="Aichi" data-capital="名古屋" data-population="7.5M" data-specialite="Miso katsu, tebasaki, hitsumabushi" data-attraction="Château de Nagoya, Atsuta-jingu" 
+                    d="M 450 720 Q 480 715 500 735 Q 510 755 500 775 Q 480 785 460 780 Q 440 765 430 745 Q 435 730 450 720 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="岐阜県" data-romaji="Gifu" data-capital="岐阜" data-population="2.0M" data-specialite="Hida beef, saké" data-attraction="Shirakawa-go, Takayama" 
+                    d="M 470 600 Q 500 595 520 615 Q 530 635 520 655 Q 500 665 480 660 Q 460 645 450 625 Q 455 610 470 600 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="富山県" data-romaji="Toyama" data-capital="富山" data-population="1.0M" data-specialite="Truite, crevettes, saké" data-attraction="Alpes japonaises, Tateyama" 
+                    d="M 450 560 Q 480 555 500 575 Q 510 595 500 615 Q 480 625 460 620 Q 440 605 430 585 Q 435 570 450 560 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="石川県" data-romaji="Ishikawa" data-capital="金沢" data-population="1.1M" data-specialite="Crabe, saké, wagashi" data-attraction="Kenrokuen, Kanazawa" 
+                    d="M 410 580 Q 440 575 460 595 Q 470 615 460 635 Q 440 645 420 640 Q 400 625 390 605 Q 395 590 410 580 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="福井県" data-romaji="Fukui" data-capital="福井" data-population="0.8M" data-specialite="Crabe echizen, saké" data-attraction="Dinosaures, Eiheiji" 
+                    d="M 390 640 Q 420 635 440 655 Q 450 675 440 695 Q 420 705 400 700 Q 380 685 370 665 Q 375 650 390 640 Z"/>
+                    
+                    <!-- Honshu - Kansai -->
+                    <path class="prefecture honshu" data-name="三重県" data-romaji="Mie" data-capital="津" data-population="1.8M" data-specialite="Matsusaka beef, perles" data-attraction="Ise Jingu, Kumano" 
+                    d="M 430 780 Q 460 775 480 795 Q 490 815 480 835 Q 460 845 440 840 Q 420 825 410 805 Q 415 790 430 780 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="滋賀県" data-romaji="Shiga" data-capital="大津" data-population="1.4M" data-specialite="Bœuf omi, funazushi" data-attraction="Lac Biwa, Hikone" 
+                    d="M 370 700 Q 400 695 420 715 Q 430 735 420 755 Q 400 765 380 760 Q 360 745 350 725 Q 355 710 370 700 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="京都府" data-romaji="Kyoto" data-capital="京都" data-population="2.6M" data-specialite="Kaiseki, tofu, thé matcha" data-attraction="Kiyomizu-dera, Fushimi Inari, Arashiyama" 
+                    d="M 350 760 Q 380 755 400 775 Q 410 795 400 815 Q 380 825 360 820 Q 340 805 330 785 Q 335 770 350 760 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="大阪府" data-romaji="Osaka" data-capital="大阪" data-population="8.8M" data-specialite="Okonomiyaki, takoyaki, kushikatsu" data-attraction="Château d'Osaka, Dotonbori, USJ" 
+                    d="M 330 820 Q 360 815 380 835 Q 390 855 380 875 Q 360 885 340 880 Q 320 865 310 845 Q 315 830 330 820 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="兵庫県" data-romaji="Hyogo" data-capital="神戸" data-population="5.5M" data-specialite="Bœuf de Kobe, saké" data-attraction="Château de Himeji, Arima Onsen" 
+                    d="M 290 820 Q 320 815 340 835 Q 350 855 340 875 Q 320 885 300 880 Q 280 865 270 845 Q 275 830 290 820 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="奈良県" data-romaji="Nara" data-capital="奈良" data-population="1.3M" data-specialite="Kakinoha-zushi, saké" data-attraction="Todai-ji, Kasuga Taisha, Daims sacrés" 
+                    d="M 360 880 Q 390 875 410 895 Q 420 915 410 935 Q 390 945 370 940 Q 350 925 340 905 Q 345 890 360 880 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="和歌山県" data-romaji="Wakayama" data-capital="和歌山" data-population="0.9M" data-specialite="Prunes umeboshi, miso" data-attraction="Kumano Kodo, Mont Koya" 
+                    d="M 320 940 Q 350 935 370 955 Q 380 975 370 995 Q 350 1005 330 1000 Q 310 985 300 965 Q 305 950 320 940 Z"/>
+                    
+                    <!-- Honshu - Chugoku -->
+                    <path class="prefecture honshu" data-name="鳥取県" data-romaji="Tottori" data-capital="鳥取" data-population="0.6M" data-specialite="Crabe matsuba, poires" data-attraction="Dunes de sable" 
+                    d="M 250 760 Q 280 755 300 775 Q 310 795 300 815 Q 280 825 260 820 Q 240 805 230 785 Q 235 770 250 760 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="島根県" data-romaji="Shimane" data-capital="松江" data-population="0.7M" data-specialite="Soba, saké" data-attraction="Izumo Taisha, Matsue" 
+                    d="M 210 780 Q 240 775 260 795 Q 270 815 260 835 Q 240 845 220 840 Q 200 825 190 805 Q 195 790 210 780 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="岡山県" data-romaji="Okayama" data-capital="岡山" data-population="1.9M" data-specialite="Pêches, raisin muscat" data-attraction="Korakuen, Kurashiki" 
+                    d="M 270 880 Q 300 875 320 895 Q 330 915 320 935 Q 300 945 280 940 Q 260 925 250 905 Q 255 890 270 880 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="広島県" data-romaji="Hiroshima" data-capital="広島" data-population="2.8M" data-specialite="Okonomiyaki, huîtres, momijimanju" data-attraction="Itsukushima, Mémorial de la Paix" 
+                    d="M 230 900 Q 260 895 280 915 Q 290 935 280 955 Q 260 965 240 960 Q 220 945 210 925 Q 215 910 230 900 Z"/>
+                    
+                    <path class="prefecture honshu" data-name="山口県" data-romaji="Yamaguchi" data-capital="山口" data-population="1.4M" data-specialite="Fugu, saké Dassai" data-attraction="Pont Kintaikyo, Hagi" 
+                    d="M 170 920 Q 200 915 220 935 Q 230 955 220 975 Q 200 985 180 980 Q 160 965 150 945 Q 155 930 170 920 Z"/>
+                    
+                    <!-- Shikoku -->
+                    <path class="prefecture shikoku" data-name="徳島県" data-romaji="Tokushima" data-capital="徳島" data-population="0.7M" data-specialite="Sudachi, patates douces" data-attraction="Awa Odori, Gorges d'Iya" 
+                    d="M 340 1000 Q 370 995 390 1015 Q 400 1035 390 1055 Q 370 1065 350 1060 Q 330 1045 320 1025 Q 325 1010 340 1000 Z"/>
+                    
+                    <path class="prefecture shikoku" data-name="香川県" data-romaji="Kagawa" data-capital="高松" data-population="0.9M" data-specialite="Udon Sanuki, olives" data-attraction="Ritsurin, Art island" 
+                    d="M 300 980 Q 330 975 350 995 Q 360 1015 350 1035 Q 330 1045 310 1040 Q 290 1025 280 1005 Q 285 990 300 980 Z"/>
+                    
+                    <path class="prefecture shikoku" data-name="愛媛県" data-romaji="Ehime" data-capital="松山" data-population="1.3M" data-specialite="Agrumes, jakoten" data-attraction="Château de Matsuyama, Dogo Onsen" 
+                    d="M 240 1000 Q 270 995 290 1015 Q 300 1035 290 1055 Q 270 1065 250 1060 Q 230 1045 220 1025 Q 225 1010 240 1000 Z"/>
+                    
+                    <path class="prefecture shikoku" data-name="高知県" data-romaji="Kochi" data-capital="高知" data-population="0.7M" data-specialite="Katsuobushi, yuzu" data-attraction="Château de Kochi, Cap Muroto" 
+                    d="M 280 1060 Q 310 1055 330 1075 Q 340 1095 330 1115 Q 310 1125 290 1120 Q 270 1105 260 1085 Q 265 1070 280 1060 Z"/>
+                    
+                    <!-- Kyushu -->
+                    <path class="prefecture kyushu" data-name="福岡県" data-romaji="Fukuoka" data-capital="福岡" data-population="5.1M" data-specialite="Ramen tonkotsu, mentaiko" data-attraction="Dazaifu, Nakasu, Canal City" 
+                    d="M 120 980 Q 150 975 170 995 Q 180 1015 170 1035 Q 150 1045 130 1040 Q 110 1025 100 1005 Q 105 990 120 980 Z"/>
+                    
+                    <path class="prefecture kyushu" data-name="佐賀県" data-romaji="Saga" data-capital="佐賀" data-population="0.8M" data-specialite="Porcelaine Arita, bœuf wagyu" data-attraction="Yoshinogari, Karatsu" 
+                    d="M 80 1000 Q 110 995 130 1015 Q 140 1035 130 1055 Q 110 1065 90 1060 Q 70 1045 60 1025 Q 65 1010 80 1000 Z"/>
+                    
+                    <path class="prefecture kyushu" data-name="長崎県" data-romaji="Nagasaki" data-capital="長崎" data-population="1.3M" data-specialite="Champon, castella, sara-udon" data-attraction="Parc de la Paix, Gunkanjima" 
+                    d="M 40 1020 Q 70 1015 90 1035 Q 100 1055 90 1075 Q 70 1085 50 1080 Q 30 1065 20 1045 Q 25 1030 40 1020 Z"/>
+                    
+                    <path class="prefecture kyushu" data-name="熊本県" data-romaji="Kumamoto" data-capital="熊本" data-population="1.7M" data-specialite="Basashi, karashi renkon" data-attraction="Château de Kumamoto, Mont Aso" 
+                    d="M 120 1040 Q 150 1035 170 1055 Q 180 1075 170 1095 Q 150 1105 130 1100 Q 110 1085 100 1065 Q 105 1050 120 1040 Z"/>
+                    
+                    <path class="prefecture kyushu" data-name="大分県" data-romaji="Oita" data-capital="大分" data-population="1.1M" data-specialite="Kabosu, fugu, sources chaudes" data-attraction="Beppu, Yufuin" 
+                    d="M 170 1020 Q 200 1015 220 1035 Q 230 1055 220 1075 Q 200 1085 180 1080 Q 160 1065 150 1045 Q 155 1030 170 1020 Z"/>
+                    
+                    <path class="prefecture kyushu" data-name="宮崎県" data-romaji="Miyazaki" data-capital="宮崎" data-population="1.1M" data-specialite="Bœuf wagyu, mangues" data-attraction="Takachiho, Nichinan" 
+                    d="M 160 1100 Q 190 1095 210 1115 Q 220 1135 210 1155 Q 190 1165 170 1160 Q 150 1145 140 1125 Q 145 1110 160 1100 Z"/>
+                    
+                    <path class="prefecture kyushu" data-name="鹿児島県" data-romaji="Kagoshima" data-capital="鹿児島" data-population="1.6M" data-specialite="Kurobuta, shochu, patates douces" data-attraction="Sakurajima, Yakushima" 
+                    d="M 120 1160 Q 150 1155 170 1175 Q 180 1195 170 1215 Q 150 1225 130 1220 Q 110 1205 100 1185 Q 105 1170 120 1160 Z"/>
+                </svg>
+                
+                <!-- Encart Okinawa -->
+                <div class="okinawa-inset">
+                    <div class="okinawa-label">沖縄県 (Okinawa)</div>
+                    <svg width="100%" height="100%" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+                        <path class="prefecture okinawa" data-name="沖縄県" data-romaji="Okinawa" data-capital="那覇" data-population="1.5M" data-specialite="Goya champuru, awamori, porc rafute" data-attraction="Château de Shuri, Plages, Culture Ryukyu" 
+                        d="M 20 40 Q 40 35 60 40 Q 80 45 100 40 Q 105 50 100 60 Q 80 65 60 60 Q 40 65 20 60 Q 15 50 15 40 Q 17 38 20 40 Z"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="tooltip" id="tooltip">
+                <h3 id="prefecture-name"></h3>
+                <div class="japanese-name" id="japanese-name"></div>
+                <div class="info"><strong>Capitale :</strong> <span id="capital"></span></div>
+                <div class="info"><strong>Population :</strong> <span id="population"></span></div>
+                <div class="info"><strong>Spécialités :</strong> <span id="specialite"></span></div>
+                <div class="info"><strong>Attractions :</strong> <span id="attraction"></span></div>
+            </div>
+            
+            <div class="legend">
+                <h3>Régions du Japon</h3>
+                <div class="legend-items">
+                    <div class="legend-item" data-region="hokkaido">
+                        <span class="legend-color hokkaido"></span>
+                        <strong>北海道</strong> (Hokkaido)
+                    </div>
+                    <div class="legend-item" data-region="honshu">
+                        <span class="legend-color honshu"></span>
+                        <strong>本州</strong> (Honshu)
+                    </div>
+                    <div class="legend-item" data-region="kyushu">
+                        <span class="legend-color kyushu"></span>
+                        <strong>九州</strong> (Kyushu)
+                    </div>
+                    <div class="legend-item" data-region="shikoku">
+                        <span class="legend-color shikoku"></span>
+                        <strong>四国</strong> (Shikoku)
+                    </div>
+                    <div class="legend-item" data-region="okinawa">
+                        <span class="legend-color okinawa"></span>
+                        <strong>沖縄</strong> (Okinawa)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instructions">
+                Survolez les préfectures pour découvrir leurs informations culturelles et gastronomiques
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tooltip = document.getElementById('tooltip');
+        const prefectures = document.querySelectorAll('.prefecture');
+        const legendItems = document.querySelectorAll('.legend-item');
+        
+        // Gestion des préfectures
+        prefectures.forEach(prefecture => {
+            prefecture.addEventListener('mouseenter', (e) => {
+                const data = e.target.dataset;
+                
+                document.getElementById('prefecture-name').textContent = data.romaji;
+                document.getElementById('japanese-name').textContent = data.name;
+                document.getElementById('capital').textContent = data.capital;
+                document.getElementById('population').textContent = data.population;
+                document.getElementById('specialite').textContent = data.specialite;
+                document.getElementById('attraction').textContent = data.attraction;
+                
+                tooltip.classList.add('visible');
+            });
+            
+            prefecture.addEventListener('mousemove', (e) => {
+                tooltip.style.left = (e.pageX + 15) + 'px';
+                tooltip.style.top = (e.pageY - 10) + 'px';
+            });
+            
+            prefecture.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('visible');
+            });
+        });
+        
+        // Gestion de la légende interactive
+        legendItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                const region = e.currentTarget.dataset.region;
+                const regionPrefectures = document.querySelectorAll(`.prefecture.${region}`);
+                
+                // Toggle highlight pour la région
+                regionPrefectures.forEach(pref => {
+                    if (pref.style.filter === 'brightness(1.3)') {
+                        pref.style.filter = '';
+                        pref.style.transform = '';
+                    } else {
+                        pref.style.filter = 'brightness(1.3)';
+                        pref.style.transform = 'scale(1.05)';
+                    }
+                });
+            });
+            
+            item.addEventListener('mouseenter', (e) => {
+                const region = e.currentTarget.dataset.region;
+                const regionPrefectures = document.querySelectorAll(`.prefecture.${region}`);
+                
+                regionPrefectures.forEach(pref => {
+                    pref.style.filter = 'brightness(1.2)';
+                });
+            });
+            
+            item.addEventListener('mouseleave', (e) => {
+                const region = e.currentTarget.dataset.region;
+                const regionPrefectures = document.querySelectorAll(`.prefecture.${region}`);
+                
+                regionPrefectures.forEach(pref => {
+                    if (pref.style.transform !== 'scale(1.05)') {
+                        pref.style.filter = '';
+                    }
+                });
+            });
+        });
+        
+        // Gestion mobile
+        prefectures.forEach(prefecture => {
+            prefecture.addEventListener('click', (e) => {
+                e.preventDefault();
+                const data = e.target.dataset;
+                
+                document.getElementById('prefecture-name').textContent = data.romaji;
+                document.getElementById('japanese-name').textContent = data.name;
+                document.getElementById('capital').textContent = data.capital;
+                document.getElementById('population').textContent = data.population;
+                document.getElementById('specialite').textContent = data.specialite;
+                document.getElementById('attraction').textContent = data.attraction;
+                
+                tooltip.classList.toggle('visible');
+                tooltip.style.position = 'relative';
+                tooltip.style.left = 'auto';
+                tooltip.style.top = 'auto';
+                tooltip.style.margin = '20px auto';
+                tooltip.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>
