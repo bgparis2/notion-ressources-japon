@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verbes de réception japonais - あげる, くれる, もらう</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #e8f5e8, #f0f8ff);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        .title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .diagram-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 40px 0;
+            position: relative;
+        }
+        
+        .person {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+        
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .speaker {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        .other {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .role {
+            font-size: 12px;
+            color: #7f8c8d;
+            background: #ecf0f1;
+            padding: 4px 8px;
+            border-radius: 10px;
+        }
+        
+        .arrow {
+            position: absolute;
+            z-index: 5;
+        }
+        
+        .arrow-give {
+            top: 50%;
+            left: 25%;
+            right: 25%;
+            height: 3px;
+            background: linear-gradient(90deg, #e74c3c, #3498db);
+            transform: translateY(-50%);
+        }
+        
+        .arrow-give::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: -8px;
+            width: 0;
+            height: 0;
+            border-left: 20px solid #3498db;
+            border-top: 11px solid transparent;
+            border-bottom: 11px solid transparent;
+        }
+        
+        .arrow-receive {
+            top: 65%;
+            left: 25%;
+            right: 25%;
+            height: 3px;
+            background: linear-gradient(90deg, #3498db, #e74c3c);
+            transform: translateY(-50%);
+        }
+        
+        .arrow-receive::after {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: -8px;
+            width: 0;
+            height: 0;
+            border-right: 20px solid #e74c3c;
+            border-top: 11px solid transparent;
+            border-bottom: 11px solid transparent;
+        }
+        
+        .verb-examples {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 50px 0;
+        }
+        
+        .verb-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .verb-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .verb-japanese {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .verb-meaning {
+            font-size: 16px;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .verb-direction {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            background: #ecf0f1;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        
+        .examples {
+            text-align: left;
+        }
+        
+        .example {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .example-jp {
+            font-size: 14px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        .example-fr {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 3px;
+        }
+        
+        .perspective-note {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 30px 0;
+            border-left: 5px solid #f39c12;
+        }
+        
+        .perspective-note h3 {
+            color: #e67e22;
+            margin-top: 0;
+        }
+        
+        .key-point {
+            background: linear-gradient(135deg, #d1ecf1, #85c1e9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+        
+        .key-point strong {
+            color: #2980b9;
+        }
+        
+        .diagram-labels {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .label {
+            position: absolute;
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        
+        .label-ageru {
+            top: 30%;
+            left: 45%;
+            transform: translateX(-50%);
+        }
+        
+        .label-kureru {
+            top: 70%;
+            left: 45%;
+            transform: translateX(-50%);
+        }
+        
+        .label-morau {
+            top: 85%;
+            left: 55%;
+            background: rgba(231, 76, 60, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">
+            🎁 Les verbes de réception japonais 🎁<br>
+            <span style="font-size: 20px; color: #7f8c8d;">あげる • くれる • もらう</span>
+        </div>
+        
+        <div class="diagram-container">
+            <div class="person">
+                <div class="avatar speaker">私</div>
+                <div class="name">MOI</div>
+                <div class="role">Locuteur</div>
+            </div>
+            
+            <div class="person">
+                <div class="avatar other">他</div>
+                <div class="name">AUTRE PERSONNE</div>
+                <div class="role">Interlocuteur</div>
+            </div>
+            
+            <div class="arrow arrow-give"></div>
+            <div class="arrow arrow-receive"></div>
+            
+            <div class="diagram-labels">
+                <div class="label label-ageru">あげる</div>
+                <div class="label label-kureru">くれる</div>
+                <div class="label label-morau">もらう</div>
+            </div>
+        </div>
+        
+        <div class="perspective-note">
+            <h3>🏠 Concept うち (intérieur) vs そと (extérieur)</h3>
+            <p>
+                <strong>うち (uchi)</strong> = Mon groupe, ma famille, mes proches, mon entreprise<br>
+                <strong>そと (soto)</strong> = Les autres, l'extérieur, les étrangers au groupe
+            </p>
+            <ul>
+                <li><strong>くれる</strong> : Utilisé quand quelqu'un de <em>そと</em> donne à <em>うち</em></li>
+                <li><strong>あげる</strong> : Utilisé quand <em>うち</em> donne à <em>そと</em></li>
+                <li><strong>もらう</strong> : Peut être utilisé dans toutes les directions</li>
+            </ul>
+        </div>
+        
+        <div class="perspective-note">
+            <h3>🎯 Point clé : Perspective du locuteur</h3>
+            <p><strong>Tout dépend de qui parle !</strong> Ces verbes expriment le mouvement d'un don ou d'une action <strong>du point de vue de celui qui parle (私)</strong>.</p>
+        </div>
+        
+        <div class="verb-examples">
+            <div class="verb-card">
+                <div class="verb-japanese">あげる</div>
+                <div class="verb-meaning">DONNER</div>
+                <div class="verb-direction">📤 De moi vers l'autre<br>("Give UP" - vers le haut)</div>
+                <div class="examples">
+                    <div class="example">
+                        <div class="example-jp">田中さんに本をあげる</div>
+                        <div class="example-fr">Je donne un livre à M. Tanaka</div>
+                    </div>
+                    <div class="example">
+                        <div class="example-jp">手伝ってあげる</div>
+                        <div class="example-fr">Je vais t'aider (faire l'action d'aider)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="verb-card">
+                <div class="verb-japanese">くれる</div>
+                <div class="verb-meaning">DONNER</div>
+                <div class="verb-direction">📥 De l'autre vers moi<br>("Give DOWN" - vers le bas)</div>
+                <div class="examples">
+                    <div class="example">
+                        <div class="example-jp">田中さんが本をくれる</div>
+                        <div class="example-fr">M. Tanaka me donne un livre</div>
+                    </div>
+                    <div class="example">
+                        <div class="example-jp">手伝ってくれる</div>
+                        <div class="example-fr">Il va m'aider (faire l'action d'aider)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="verb-card">
+                <div class="verb-japanese">もらう</div>
+                <div class="verb-meaning">RECEVOIR</div>
+                <div class="verb-direction">📨 Je reçois activement<br>("Pull download" - j'attire vers moi)</div>
+                <div class="examples">
+                    <div class="example">
+                        <div class="example-jp">田中さんに本をもらう</div>
+                        <div class="example-fr">Je reçois un livre de M. Tanaka</div>
+                    </div>
+                    <div class="example">
+                        <div class="example-jp">手伝ってもらう</div>
+                        <div class="example-fr">Je me fais aider (par quelqu'un)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="key-point">
+            <strong>🔑 Différence cruciale :</strong><br>
+            • <strong>くれる</strong> = L'autre personne prend l'initiative de donner<br>
+            • <strong>もらう</strong> = Je prends l'initiative de recevoir (je demande, j'obtiens)
+        </div>
+        
+        <div class="key-point">
+            <strong>🏠 Exemples avec うち/そと :</strong><br>
+            • <strong>母が弟にお金をあげる</strong> = Ma mère donne de l'argent à mon petit frère (うち → うち)<br>
+            • <strong>先生が私に本をくれる</strong> = Le professeur me donne un livre (そと → うち)<br>
+            • <strong>友達にプレゼントをもらう</strong> = Je reçois un cadeau d'un ami
+        </div>
+        
+        <div class="key-point">
+            <strong>💡 Avec les actions (verbe + て) :</strong><br>
+            • <strong>してあげる</strong> = Je fais quelque chose POUR quelqu'un<br>
+            • <strong>してくれる</strong> = Quelqu'un fait quelque chose POUR moi<br>
+            • <strong>してもらう</strong> = Je me fais faire quelque chose (j'obtiens que quelqu'un le fasse)
+        </div>
+        
+        <div class="perspective-note">
+            <h3>⚠️ Attention aux particules et groupes !</h3>
+            <p>
+                • Avec <strong>あげる/くれる</strong> : <code>AさんがBさんに～をあげる/くれる</code><br>
+                • Avec <strong>もらう</strong> : <code>AさんがBさんに～をもらう</code> (に = source/de qui)<br>
+                • <strong>Règle うち/そと</strong> : On utilise <strong>くれる</strong> pour tout don vers notre groupe !
+            </p>
+        </div>
+    </div>
+</body>
+</html>
